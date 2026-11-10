@@ -1,10 +1,7 @@
 name: iOS app
 
 on:
-  workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['index.html', 'videos/**', 'app/**', '.github/workflows/ios.yml']
+  workflow_dispatch:   # يشتغل يدوياً فقط (عند الحاجة لآبل ستور)
 
 jobs:
   build:

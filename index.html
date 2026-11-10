@@ -1,3 +1,15 @@
+<!doctype html>
+<html lang="ar"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e2742">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="قدرات لفظي">
 <title>قدرات لفظي · ثانوية العطف</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -303,6 +315,14 @@ button{cursor:pointer}
 #certModel{width:100%;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:10px 12px;font:inherit;font-weight:600;color:var(--ink)}
 #certModel option{background:#1d292e}
 @media (max-width:900px){.vstats{grid-template-columns:1fr 1fr}}
+/* ---------- install (PWA) ---------- */
+.side-row.inst{width:100%;font:inherit;color:inherit;background:rgba(232,196,106,.14);border:1px solid rgba(232,196,106,.35);border-radius:10px;cursor:pointer;text-align:right}
+.inst-modal{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:16px;direction:rtl}
+.inst-box{background:#16202a;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:22px;max-width:420px;width:100%;text-align:center;color:#fff}
+.inst-box img{border-radius:16px}.inst-box h3{margin:10px 0 6px;font-size:20px}
+.inst-box p{margin:10px 0 4px;color:var(--muted);text-align:right}.inst-box ol{text-align:right;margin:0;padding-right:20px;line-height:1.9}
+.inst-box .k{display:inline-block;background:rgba(255,255,255,.12);border-radius:6px;padding:0 6px}
+.inst-ok{margin-top:14px;font:inherit;font-weight:700;background:#fff;color:#111;border:0;border-radius:999px;padding:8px 28px;cursor:pointer}
 /* ---------- SEA WORLD ---------- */
 .mcard.seam{background:linear-gradient(160deg,rgba(47,143,199,.35),rgba(11,68,104,.35));border-color:rgba(127,224,255,.35)}
 
@@ -501,6 +521,7 @@ button{cursor:pointer}
             </div>
           </div>
           <div class="auth-foot">تريدين التصفح فقط؟<button type="button" id="quickVisit">دخول سريع كزائرة</button></div>
+          <div class="auth-foot js-install" hidden>📲 تبين المنصة كتطبيق على جوالك؟<button type="button" class="js-installBtn">ثبّتي التطبيق</button></div>
         </form>
       </div>
     </div>
@@ -526,6 +547,7 @@ button{cursor:pointer}
       <div class="side-bot">
         <div class="side-row"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/></svg>المعلمة<span class="v js-teacher">عالية المالكي</span></div>
         <div class="side-row"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2 8 12.7 4 8.8 9.5 8z"/></svg>المديرة<span class="v js-principal"></span></div>
+        <button class="side-row inst js-install js-installBtn" hidden type="button"><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M12 7v7M9 11l3 3 3-3M10 18h4"/></svg>ثبّتي التطبيق</button>
         <div class="side-row"><span class="avatar"></span><span id="sideName" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">—</span><button class="logout" id="logout" title="تسجيل الخروج">خروج</button></div>
       </div>
     </aside>
@@ -767,6 +789,11 @@ button{cursor:pointer}
   <div class="qcard"><div class="qin" id="qBody"></div></div>
 </div>
 
+<div class="inst-modal" id="instModal" hidden role="dialog" aria-modal="true" aria-labelledby="instT"><div class="inst-box">
+  <img src="icons/icon-192.png" alt="" width="72" height="72"><h3 id="instT">ثبّتي «قدرات لفظي» على جوالك</h3>
+  <div id="instIos"><p>في الآيفون (من متصفح <b>سفاري</b>):</p><ol><li>اضغطي زر <b>المشاركة</b> <span class="k">⬆︎</span> أسفل الشاشة</li><li>اختاري <b>«إضافة إلى الشاشة الرئيسية»</b></li><li>اضغطي <b>«إضافة»</b>، وتظهر أيقونة المنصة بين تطبيقاتك</li></ol></div>
+  <div id="instAnd"><p>في الأندرويد (من متصفح <b>Chrome</b>):</p><ol><li>اضغطي النقاط الثلاث <span class="k">⋮</span> أعلى الشاشة</li><li>اختاري <b>«تثبيت التطبيق»</b> أو «إضافة إلى الشاشة الرئيسية»</li></ol></div>
+  <button type="button" id="instClose" class="inst-ok">تمام</button></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 document.documentElement.lang='ar';
@@ -1458,4 +1485,17 @@ function seaLoop(now){SEA.raf=0;if(!SEA.vis)return;const t=now/1000;
 new IntersectionObserver(es=>{SEA.vis=es[0].isIntersecting;if(SEA.vis&&!SEA.raf)SEA.raf=requestAnimationFrame(seaLoop)},{threshold:.05}).observe($('#sea'));
 seaSetGame('ship');
 
+
+/* ---------- install as an app (PWA) ---------- */
+(function(){const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+  if(location.protocol.startsWith('http')&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if(standalone||!location.protocol.startsWith('http'))return;
+  let deferred=null;const show=()=>$$('.js-install').forEach(e=>e.hidden=false);show();
+  addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e});
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const open=()=>{if(deferred){deferred.prompt();deferred.userChoice.finally(()=>deferred=null);return}
+    $('#instIos').hidden=!ios&&/android/i.test(navigator.userAgent);$('#instAnd').hidden=ios;$('#instModal').hidden=false;$('#instClose').focus()};
+  $$('.js-installBtn').forEach(b=>b.onclick=open);$('#instClose').onclick=()=>$('#instModal').hidden=true;
+  $('#instModal').addEventListener('click',e=>{if(e.target.id==='instModal')$('#instModal').hidden=true});
+  addEventListener('appinstalled',()=>$$('.js-install').forEach(e=>e.hidden=true));})();
 </script>
