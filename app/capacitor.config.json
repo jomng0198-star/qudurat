@@ -1,0 +1,10 @@
+{
+  "appId": "sa.atf.qudurat.lafthi",
+  "appName": "قدرات لفظي",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0e2742",
+    "limitsNavigationsToAppBoundDomains": false
+  }
+}

@@ -1,0 +1,42 @@
+name: iOS app
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['index.html', 'videos/**', 'app/**', '.github/workflows/ios.yml']
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Capacitor
+        working-directory: app
+        run: npm install --no-audit --no-fund
+      - name: Copy the platform into the app
+        working-directory: app
+        run: node prepare.js
+      - name: Create the iOS project
+        working-directory: app
+        run: |
+          [ -d ios ] || npx cap add ios
+          npx capacitor-assets generate --ios --iconBackgroundColor '#0e2742' --splashBackgroundColor '#0e2742'
+          npx cap sync ios
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDevelopmentRegion ar" ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" ios/App/App/Info.plist || true
+      - name: Build (simulator, unsigned) to verify the app compiles
+        working-directory: app/ios/App
+        run: |
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build | tail -n 25
+      - name: Upload the generated iOS project
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-project
+          path: app/ios
+          retention-days: 14
