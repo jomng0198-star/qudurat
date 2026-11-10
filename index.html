@@ -1110,7 +1110,7 @@ const VIDEOS=[
  {t:'إكمال الجمل (٢)',d:'شرح بتعليق صوتي: كيف تدلّك «لكن» و«كلما» و«لأن» على الإجابة.',tags:['🎙️ تعليق صوتي','أدوات ربط'],url:''},
  {t:'الخطأ السياقي (٢)',d:'شرح بتعليق صوتي: حددي المعنى العام ثم الكلمة التي تخالفه.',tags:['🎙️ تعليق صوتي','معنى عام'],url:''},
  {t:'استيعاب المقروء (٢)',d:'شرح بتعليق صوتي على نصّي «المد والجزر» و«الغوص على اللؤلؤ».',tags:['🎙️ تعليق صوتي','فكرة رئيسة'],url:''}];
-const VDUR=["0:52", "0:50", "0:48", "0:53", "0:54", "0:59", "1:34", "1:37", "1:27", "1:22"];
+const VDUR=["0:52", "0:50", "0:48", "0:53", "0:54", "0:59", "1:32", "1:35", "1:28", "1:23"];
 function vBump(i,f){const v=vids();const x=v[i]||{p:0,c:false};f(x);v[i]=x;uset('vids',v);const g=store.get('vplays',{});if(f.name==='play'){}store.set('vplays',g);renderVideos();renderProgress();syncRoster()}
 function markPlay(i){vBump(i,x=>{x.p=(x.p||0)+1});const g=store.get('vplays',{});g[i]=(g[i]||0)+1;store.set('vplays',g)}
 function markDone(i){const x=vids()[i];if(x&&x.c)return;vBump(i,x=>{x.c=true})}
