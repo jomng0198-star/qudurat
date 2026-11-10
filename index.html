@@ -290,6 +290,7 @@ button{cursor:pointer}
 .ana td.sc{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:500}
 .ana td.hi{color:#7ee2a8}.ana td.md{color:#ffd77a}.ana td.lo{color:#ff9c8e}.ana td.na{color:var(--faint)}
 .ana tr:last-child td{border-bottom:0}
+.ana tr.me td{background:rgba(232,196,106,.14)}.ana tr.me td:first-child{background:#3a3a2a}.ana td small{color:var(--gold);font-size:11px}
 .ana .avg{font-weight:700}
 .vstats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
 .vs{background:rgba(0,0,0,.2);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
@@ -874,9 +875,16 @@ function normScores(s){s=s||{};for(const k in s)if(typeof s[k]==='number')s[k]={
 function scores(){return normScores(uget('scores',{}))}
 function bestOf(s,i){return s&&s[i]?s[i].best:null}
 function vids(){return uget('vids',{})}
+const SHEET_URL='https://script.google.com/macros/s/AKfycbxWMaElyQ-8lOhhHHEHFXEZxhi9At513zAdClvIs97rti5RfL_QXIRxAQ9wfRInwkW03g/exec'; // رابط Google Apps Script (Web app) لجمع النتائج من كل الأجهزة
 const SH={db:null,uid:null,rows:[],readable:false};
+function loadSheet(){if(!SHEET_URL)return;fetch(SHEET_URL,{cache:'no-store'}).then(r=>r.json()).then(j=>{if(j&&j.ok){SH.rows=j.rows||[];SH.readable=true;SH.sheet=j.sheet;renderAnalysis();renderVideos()}}).catch(()=>{})}
+function pushSheet(){if(!SHEET_URL||!user||user.role!=='student')return;
+  fetch(SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(myRecord())}).then(()=>setTimeout(loadSheet,800)).catch(()=>{store.set('sheetPending',true)})}
+setInterval(()=>{if(user&&!$('#dash').hidden)loadSheet()},60000);
+addEventListener('online',()=>{if(store.get('sheetPending',false)){store.set('sheetPending',false);pushSheet()}});
 function myRecord(){return {name:user.name,scores:scores(),vids:vids(),ts:Date.now()}}
 function syncRoster(){if(!user||user.role!=='student')return;const r=store.get('roster',{});r[user.name]=myRecord();store.set('roster',r);
+  clearTimeout(SH.ts2);SH.ts2=setTimeout(pushSheet,500);
   if(SH.db&&SH.uid){clearTimeout(SH.t);SH.t=setTimeout(()=>{SH.db.doc('results/'+SH.uid).set(myRecord()).catch(()=>{})},600)}
   renderAnalysis()}
 function loadShared(){if(!SH.db)return;const tm=setTimeout(()=>{},10000);
@@ -889,23 +897,24 @@ function allRows(){const m={};const r=store.get('roster',{});for(const k in r)m[
 function cls(v){return v==null?'na':v>=24?'hi':v>=15?'md':'lo'}
 function renderAnalysis(){if(!user)return;const T=$('#anaTable');if(!T)return;
   const isT=user.role==='teacher',isS=user.role==='student';
-  let rows=isT?allRows():isS?[{...myRecord(),scores:scores()}]:[];
+  let rows=allRows();if(isS&&!rows.some(r=>r.name===user.name))rows.push({...myRecord(),scores:scores()});
   rows.sort((a,b)=>a.name.localeCompare(b.name,'ar'));
   const head='<tr><th>اسم الطالبة</th>'+MODELS.map((_,i)=>`<th>ن${i+1}</th>`).join('')+'<th>المتوسط /٣٠</th><th>الشروحات</th><th>آخر نشاط</th></tr>';
   const fmt=ts=>ts?new Date(ts).toLocaleDateString('ar-SA',{day:'numeric',month:'short'}):'—';
   let all=[],mx=null,vc=0;
   const body=rows.map(r=>{const vals=MODELS.map((_,i)=>bestOf(r.scores,i));const got=vals.filter(v=>v!=null);all.push(...got);got.forEach(v=>mx=mx==null?v:Math.max(mx,v));
     const avg=got.length?(got.reduce((a,b)=>a+b,0)/got.length):null;const vd=Object.values(r.vids).filter(v=>v.c).length;vc+=vd;
-    return `<tr><td>${esc(r.name)}</td>${vals.map(v=>`<td class="sc ${cls(v)}">${v==null?'—':v}</td>`).join('')}<td class="sc avg ${cls(avg)}">${avg==null?'—':avg.toFixed(1)}</td><td class="sc">${vd}/6</td><td>${fmt(r.ts)}</td></tr>`}).join('');
-  T.innerHTML=head+(body||`<tr><td colspan="${MODELS.length+4}" style="text-align:center;color:var(--muted)">${isT?'لا توجد نتائج بعد. تظهر هنا أسماء الطالبات ودرجاتهن بعد حل النماذج.':isS?'حلّي أول نموذج لتظهر درجتك هنا.':'سجّلي الدخول كطالبة أو معلمة لعرض النتائج.'}</td></tr>`);
+    return `<tr${isS&&r.name===user.name?' class="me"':''}><td>${esc(r.name)}${isS&&r.name===user.name?' <small>(أنتِ)</small>':''}</td>${vals.map(v=>`<td class="sc ${cls(v)}">${v==null?'—':v}</td>`).join('')}<td class="sc avg ${cls(avg)}">${avg==null?'—':avg.toFixed(1)}</td><td class="sc">${vd}/6</td><td>${fmt(r.ts)}</td></tr>`}).join('');
+  T.innerHTML=head+(body||`<tr><td colspan="${MODELS.length+4}" style="text-align:center;color:var(--muted)">لا توجد نتائج بعد. تظهر هنا أسماء الطالبات ودرجاتهن بعد حل النماذج.</td></tr>`);
   $('#k-n').textContent=rows.length;$('#k-avg').textContent=all.length?(all.reduce((a,b)=>a+b,0)/all.length).toFixed(1)+' / 30':'—';$('#k-max').textContent=mx==null?'—':mx+' / 30';$('#k-vid').textContent=vc;
-  $('#anaSrc').textContent=isT?(SH.readable?'نتائج كل الأجهزة':'نتائج هذا الجهاز'):isS?'نتائجي':'';
-  $('#anaNote').textContent=isT?(SH.readable?'تُجمع النتائج من الطالبات المسجّلات في Claude، ومن هذا الجهاز.':'تظهر هنا نتائج الطالبات اللاتي حللن النماذج على هذا الجهاز. الدرجة من ٣٠ (درجة لكل سؤال).'):isS?'الدرجة من ٣٠: درجة لكل سؤال، ويُحتسب أعلى ما حققتِه في كل نموذج.':'';
+  $('#anaSrc').textContent=SH.readable?'نتائج كل الأجهزة · تتحدث تلقائياً':'نتائج هذا الجهاز';
+  $('#anaNote').textContent='الدرجة من ٣٠ (درجة لكل سؤال)، ويُحتسب أعلى ما حققته الطالبة في كل نموذج.'+(SH.readable?' النتائج مجمّعة من كل الجوالات والأجهزة.':'');
+  if(isT&&SH.sheet){const n=$('#anaNote');const l=document.createElement('a');l.href=SH.sheet;l.target='_blank';l.rel='noopener';l.textContent=' · فتح جدول Google Sheets ↗';l.style.color='var(--gold)';n.appendChild(l)}
   // video stats
   const vs=VIDEOS.map((v,i)=>{let plays=0,comp=0,started=0;
-    if(isT){rows.forEach(r=>{const x=r.vids[i];if(x){plays+=x.p||0;started++;if(x.c)comp++}})}else{const x=vids()[i]||{};plays=x.p||0;started=plays?1:0;comp=x.c?1:0}
-    const denom=isT?Math.max(rows.length,1):1;
-    return `<div class="vs"><b>${i+1}. ${v.t}</b><small>${isT?`المشاهدات: ${plays} · أكملته ${comp} من ${rows.length}`:`شاهدتِه ${plays} ${plays===1?'مرة':'مرات'} · ${comp?'مكتمل ✓':plays?'لم يكتمل':'لم يُشاهد'}`}</small><span class="bar"><i style="width:${comp/denom*100}%"></i></span></div>`}).join('');
+    if(isT||SH.readable){rows.forEach(r=>{const x=r.vids[i];if(x){plays+=x.p||0;started++;if(x.c)comp++}})}else{const x=vids()[i]||{};plays=x.p||0;started=plays?1:0;comp=x.c?1:0}
+    const denom=(isT||SH.readable)?Math.max(rows.length,1):1;
+    const agg=isT||SH.readable;return `<div class="vs"><b>${i+1}. ${v.t}</b><small>${agg?`المشاهدات: ${plays} · أكملته ${comp} من ${rows.length}`:`شاهدتِه ${plays} ${plays===1?'مرة':'مرات'} · ${comp?'مكتمل ✓':plays?'لم يكتمل':'لم يُشاهد'}`}</small><span class="bar"><i style="width:${comp/denom*100}%"></i></span></div>`}).join('');
   $('#vStats').innerHTML=vs}
 
 /* ---------- email each result to the teacher (works when hosted on GitHub Pages) ---------- */
@@ -935,7 +944,7 @@ function enterDash(){
   $('#editPrincipal').hidden=user.role!=='teacher';
   if(user.role==='student'&&!$('#certName').value)$('#certName').value=user.name;
   renderNames();
-  renderModels();renderVideos();requestAnimationFrame(()=>{drawSky();setupSkyFx();drawBurst();renderStats();renderProgress();renderCert();renderAnalysis();syncRoster();if(user.role==='teacher')loadShared();initGame()});
+  renderModels();renderVideos();requestAnimationFrame(()=>{drawSky();setupSkyFx();drawBurst();renderStats();renderProgress();renderCert();renderAnalysis();syncRoster();if(user.role==='teacher')loadShared();loadSheet();initGame()});
 }
 $('#editPrincipal').onclick=()=>{const ed=$('#principalEditor');ed.hidden=!ed.hidden;$('#principalIn').value=store.get('principal','')};
 $('#savePrincipal').onclick=()=>{store.set('principal',$('#principalIn').value.trim());$('#principalEditor').hidden=true;renderNames();renderCert()};
