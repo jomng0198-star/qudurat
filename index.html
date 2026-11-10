@@ -918,7 +918,7 @@ function renderAnalysis(){if(!user)return;const T=$('#anaTable');if(!T)return;
   $('#vStats').innerHTML=vs}
 
 /* ---------- email each result to the teacher (works when hosted on GitHub Pages) ---------- */
-const RESULT_EMAIL='t683956@mkhg.moe.gov.sa';
+const RESULT_EMAIL='alyahalmalky9@gmail.com';
 function sendQueue(){let q=store.get('mailq',[]);if(!q.length)return;const item=q[0];
   fetch('https://formsubmit.co/ajax/'+RESULT_EMAIL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(item)})
    .then(r=>{if(!r.ok)throw 0;q=store.get('mailq',[]);q.shift();store.set('mailq',q);if(q.length)setTimeout(sendQueue,1500)}).catch(()=>{})}
